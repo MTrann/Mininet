@@ -175,7 +175,9 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
 
 
       /*********************************************************************/
-
+     struct sr_packet *curr_packet = reg->packet;
+        
+      
       sr_arpreq_destroy(&(sr->cache), req);
     }
     else
