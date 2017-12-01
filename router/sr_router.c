@@ -176,6 +176,10 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
 
       /*********************************************************************/
      struct sr_packet *curr_packet = reg->packet;
+     while(curr_packet != NULL){
+         send_icmp_packe(sr,curr_packet, 3,0);
+         curr_packet = curr_packet -> next;
+     }
         
       
       sr_arpreq_destroy(&(sr->cache), req);
