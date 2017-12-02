@@ -172,6 +172,18 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
       /* packets waiting on this request                                   */
 
 
+      sr_packet packet;
+      packet = req->packets;
+      char*  interface;
+      
+      while(packet != NULL)
+      {
+        interface = packet.iface;
+
+        sr_send_packet(sr, packet, packet->len, interface);
+        packet = packet.next;
+      }
+
 
 
       /*********************************************************************/
