@@ -314,12 +314,9 @@ More indepth:
 
   unfinished:
     sr_handlepacket_ip
-    sr_handle_ip_packet_reception
-    send_icmp_echo_reply
-
-  Need:
-   send_icmp_error
     sr_forward_packet
+  Need:
+    ???
 
 /////////////////////////////////////////////////////////////////////////
 //NOTE: THE NEEDED LIST IS INCOMPLETE. WE MAY NEED MORE THAN JUST THAT.// 
@@ -332,15 +329,10 @@ More indepth:
 Dependencies:
 
   sr_handlepacket_ip
-    sr_handle_ip_packet_reception
     sr_forward_packet
-
-  sr_handleip_packet_reception
-    send_icmp_echo_reply
-    send_icmp_error
-
   sr_forward_packet
-    send_icmp_error
+    ???
+    
 */
 void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
@@ -384,21 +376,28 @@ void sr_handlepacket_ip(struct sr_instance* sr,
       return;
     }
     interfaces = interfaces->next;
-    //Packet is not ours
-      //check ttl
-      //if ttl is less than or equal to 1
-        //send an ICMP time exceeded (type 11 code 0)
-      //else
-        //forward the packet
-          //look up next hop address by doing a LPM on the routing table using the packet's destination address
-          //if it does not exist
-            //send an icmp port unreachable (type3, code 3)
-          //if it does exist
-            //determine outgoing interface and next-hop MAC address
-              //it might be necessary to send ARP request to determine MAC address
-            //encapsulate IP datagram in ethernet packet
-            //forward packet to outgoing interface
+    if(ip_header->ip_ttl<=1)
+    {
+      send_icmp(sr,icmp_type_time_exceeded,icmp_code_TTL_expired,packet,interfaces);
+    }
+    else{
+      sr_forward_packet(sr,packet,len,interface);
+    }
   }
+}
+void sr_forward_packet(struct sr_instance* sr,
+        uint8_t *packet,
+        unsigned int len,
+        sr_if *interface){
+  //look up next hop address by doing a LPM on the routing table using the packet's destination address
+  //if it does not exist
+    //send_icmp(sr,icmp_type_destination_unreachable,icmp_code_port_unreachable)
+  //if it does exist
+    //determine outgoing itnerface and next-hop MAC address
+      //it might be necessary to send ARP request to determine MAC address
+    //encapsulate IP datagram in ethernet packet
+    //forward packet to outgoing interface
+
 }
 void sr_handle_ip_packet_reception(struct sr_instance* sr,
         uint8_t *packet,
@@ -468,16 +467,15 @@ sr_icmp_hdr_t *get_icmp_header(uint8_t packet*){
 
 
 
-//INCOMPLETE//
+//COMPLETE//
 int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface){
-
   //Create an empty packet with the size depending on the type of icmp message.
   unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+;
   uint8_t *newPacket;
   switch(icmp_type){
     case(icmp_type_destination_unreachable):
     case(icmp_type_time_exceeded):
-    case(icmp_type_echo_request):
+    //case(icmp_type_echo_request):
       len +=sizeof(sr_icmp_t3_hdr_t);
       break;
     case(icmp_type_echo_reply):
@@ -488,7 +486,6 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   }
   *newPacket = (*uint8_t)malloc(len);
   bzero(newPacket,len);
-  
   //ICMP is wrapped by IP which is wrapped by Ethernet.
   //Constructing from Ethernet -> ICMP
   //get Ethernet and IP headers, icmp will be split up at the end by type.
@@ -496,9 +493,10 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
   sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
   sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
-  //get the interface so we can have address for ethernet header source host
+  
 
   //Construct Ethernet Header
+  //get the interface so we can have address for ethernet header source host
   struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_src);
   memcpy(newEthernetHeader->ether_dhost,recievedEthernetHeader->ether_shost,ETHER_ADDR_LEN);
   memcpy(newEthernetHeader->ether_shost,outgoingInterface->addr,ETHER_ADDR_LEN);
@@ -507,36 +505,47 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   //newEthernetHeader->ether_dhost = recievedEthernetHeader->ether_shost;
   //newEthernetHeader->ether_shost = outgoingInterface->addr;
 
-
   //Construct IP header
   //need to fill in
   newIPHeader->ip_hl = 4;
   newIPHeader->ip_v=4;
   newIPHeader->ip_tos = originalIPHeader->ip_tos;
-  newIPHeader->ip_len = len-sizeof(sr_ethernet_hdr_t);
+  newIPHeader->ip_len = htons(len-sizeof(sr_ethernet_hdr_t));
   newIPHeader->ip_id = 0; //doesn't matter since we are not fragmenting the datagram
-  newIPHeader->ip_off = IP_DF; //IP_DF is found in sr_protocol.h
+  newIPHeader->ip_off = htons(IP_DF); //IP_DF is found in sr_protocol.h
   newIPHeader->ip_ttl = INIT_TTL; //INIT_TTL is found in sr_router.h
   newIPHeader->ip_p = ip_protocol_icmp; //ip_protocol_icmp is found in sr_protocol.h
   newIPHeader->src = interface->ip;
   newIPHeader->dst = originalIPHeader->ip_src;
-  //ip_hl (4)
-  //ip_v (4)
-  //ip_tos (get from originalIPHeader)
-  //ip_len (length-ethernethdr)
-  //ip_id (0)
-  //ip_off IP_DF(dont fragment)
-  //ip_ttl INIT_TTL
-  //ip_p ip_protocol_icmp
-  //ip_sum (cksum at end)
-  //ip_src (from interface - ip)
-  //ip_dst = (get from originalIPHeader (ip_src))
+  newIPHeader->ip_sum = 0;
+  newIPHeader->ip_sum=cksum(newIPHeader,len-sizeof(sr_ethernet_hdr_t));
 
-  //Construct ICMP header (SPLIT!!!)
-
-
-
-
+  //Construct ICMP header and send!
+  switch(icmp_type){
+    case(icmp_type_destination_unreachable):
+    case(icmp_type_time_exceeded):
+    //case(icmp_type_echo_request):
+    sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
+    newICMPT3Header->icmp_type = icmp_type;
+    newICMPT3Header->icmp_code = icmp_code;
+    memcpy(newICMPT3Header->data,originalIPHeader,ICMP_DATA_SIZE);
+    newICMPT3Header->icmp_sum = 0;
+    newICMPT3Header->icmp_sum = cksum(newICMPT3Header,len-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
+    int toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
+    return toReturn;
+      break;
+    case(icmp_type_echo_reply):
+    sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
+    newICMPHeader->icmp_type = icmp_type;
+    newICMPHeader->icmp_code = icmp_code;
+    newICMPHeader->icmp_sum = 0;
+    newICMPHeader->icmp_sum = cksum(newICMPHeader,len-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
+    int toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
+    return toReturn;
+      break;
+    default:
+      return -1;
+  }
 }
 
 struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t destination) {
@@ -549,15 +558,6 @@ struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t des
   }
   return NULL;
 }
-
-//sr instance the simple router
-//icmp_type
-//icmp_code
-//originalPacket
-//sr_if interface - the interface it was recieved on.
-//check the type
-
-
 //https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
 enum sr_icmp_type{
   icmp_type_destination_unreachable = 0x0003,
