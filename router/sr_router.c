@@ -188,7 +188,7 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
 
       /*********************************************************************/
      struct sr_packet *curr_packet = reg->packet;
-        printf("Trying to reach packet number");
+        printf("Send ICMP host unreachable packet");
      while(curr_packet != NULL){
          send_icmp_message(sr,curr_packet, 3,0);
          curr_packet = curr_packet -> next;
@@ -573,3 +573,6 @@ enum sr_icmp_code{
   icmp_code_host_unreachable = 0x0001
 };
 
+void send_icmp_message(struct sr_instance *sr, struct sr_packet *curr_packet, uint8_t type, uint8_t code){
+    
+}
