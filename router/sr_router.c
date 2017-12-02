@@ -302,21 +302,56 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
 void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
-        char* interface/* lent */)
-{
+        char* interface/* lent */){
   /* REQUIRES */
   assert(sr);
   assert(packet);
   assert(interface);
-
   printf("*** -> Received packet of length %d \n",len);
-
-  /*************************************************************************/
-  /* TODO: Handle packets                                                  */
-
-
-
-  /*************************************************************************/
-
-}/* end sr_ForwardPacket */
+  struct sr_if simpleRouterInterface* = sr_get_interface(sr,interface);
+  uint16_t ethtype = ethertype(packet);
+  switch(ethtype){
+    case(ethertype_ip):
+      sr_handlepacket_ip(sr,packet,len,simpleRouterInterface);
+      break;
+    case(ethertype_arp):
+      sr_handlepacket_arp(sr,packet,len,simpleRouterInterface);
+      break
+    default:
+      fprintf(stderr, "Packet type Unknown, dropping.", );
+  }
+}
+void sr_handlepacket_ip(struct sr_instance* sr,
+        uint8_t *packet,
+        unsigned int len,
+        char* interface){
+ /**************************
+ *To Do:
+ * Check packet length
+ * Validate IP header (should be ipv4)
+ * Validate Checksum (cksum function in sr_utils.c)
+ * Check to see if it is destine to us
+ *
+ * if the packet is to us check ip_p to see if it is icmp
+ *  if it is icmp check the type
+ *    if the type is 8 generate a echo reply (type 0)
+ * if the packet is not icmp, drop the packet. by generating an icmp port unreachable (type3, code3)
+ *
+ *
+ * if the packet is not to us
+ *  check ip_ttl, if TTL<=1 send ICMP time exceeded (type 11, code 0)
+ *  look up next-hop address by doing a LPM on the routing table using the packet's destination address
+ *    if it does not exist 
+ *       send an icmp port unreachable (type3, code 3)
+ *    if it does exist
+ *        determine outgoing interface and next-hop MAC address
+ *        if necessary send ARP request to determine MAC address
+ *        encapsulate  IP datagram in ethernet packet
+ *        forward packet to outgoing interface
+ *
+ *
+ *
+ *
+ **************************/ 
+}
 
