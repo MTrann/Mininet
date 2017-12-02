@@ -299,6 +299,49 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
  *
  *---------------------------------------------------------------------*/
 
+
+
+
+
+
+/*
+TODO:
+overview:
+  icmp messages
+  packet forwarding
+
+More indepth:
+
+  unfinished:
+    sr_handlepacket_ip
+    sr_handle_ip_packet_reception
+    send_icmp_echo_reply
+
+  Need:
+   send_icmp_error
+    sr_forward_packet
+
+/////////////////////////////////////////////////////////////////////////
+//NOTE: THE NEEDED LIST IS INCOMPLETE. WE MAY NEED MORE THAN JUST THAT.// 
+//THE UNFINISHED LIST IS ALSO INCOMPLETE, ONE THE NEEDED LIST IS BEGUN //
+//THE UNFINISHED LIST WILL EXPAND.                                     //
+/////////////////////////////////////////////////////////////////////////
+//PLEASE UPDATE THE LISTS AS YOU WORK ON THE PROJECT                   //
+/////////////////////////////////////////////////////////////////////////
+
+Dependencies:
+
+  sr_handlepacket_ip
+    sr_handle_ip_packet_reception
+    sr_forward_packet
+
+  sr_handleip_packet_reception
+    send_icmp_echo_reply
+    send_icmp_error
+
+  sr_forward_packet
+    send_icmp_error
+*/
 void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
@@ -335,13 +378,9 @@ void sr_handlepacket_ip(struct sr_instance* sr,
   //walk through our routers interfaces and see if the ip matches with the packet headers ip destination
   struct sr_if *interfaces = sr->if_list;
   while(interfaces){
-    if(itnerfaces->ip==ip_header->ip_dst){
-      //It matches!
-      //handle the packet
-      //    check if the packet is icmp - check ip_p
-      //     if it is icmp check the type
-      //     if it is type 8 generate an echo reply (type 0)
-      //     if the packet is not icmp generate an icmp port unreachable.
+    if(interfaces->ip==ip_header->ip_dst){
+      //it matches!
+      sr_handle_ip_packet_reception(sr,packet,len,interfaces);
       return;
     }
     interfaces = interfaces->next;
@@ -361,9 +400,42 @@ void sr_handlepacket_ip(struct sr_instance* sr,
             //forward packet to outgoing interface
   }
 }
+void sr_handle_ip_packet_reception(struct sr_instance* sr,
+        uint8_t *packet,
+        unsigned int len,
+        sr_if *interface){
+  /*
+    Will probably need seperate methods for the two... I have an incomplete one for the echo reply... my head hurts... I'm going to bed...
+  */
+  sr_ip_hdr_t ip_header = get_ip_header(packet);
+  uint8_t packets_ip_protocol = ip_header->ip_p;
+  if(packets_ip_protocol==ip_protocol_icmp)
+  {
+
+    sr_icmp_hdr_t *icmpHeader = get_icmp_header(packet);
+    //NEED TO CHECK THE HEADER OF ICMP HERE
+    //NEED TO CHECK THE HEADER OF ICMP HERE
+    //NEED TO CHECK THE HEADER OF ICMP HERE
+    //NEED TO CHECK THE HEADER OF ICMP HERE
+    uint8_t icmpType = icmpHeader->icmp_type;
+
+    if(icmpType==0x008){
+      //reply with echo reply. (type 0x0, code 0x0)
+
+    }
+    else{
+      return;
+    }
+  }
+  else{
+    //generate icmp port unreachable
+  }
+  
+}
+
+
 uint8_t is_ip_packet_ok(sr_ip_hdr_t *ip_header,unsigned int len){
   //sanity check for ip packets
-  
   //check checksum
   uint8_t isPacketOkay = (is_ip_chksum_ok());
   //check length
@@ -380,7 +452,46 @@ uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
   return isChkSumOk;
 }
 //returns the lcoation of the IP header within the packet
+sr_ethernet_hdr_t *get_ethernet_header(uint8_t packet*){
+  return (sr_ethernet_hdr_t *)packet;
+}
 sr_ip_hdr_t *get_ip_header(uint8_t packet*){
   return (sr_ip_hdr_t *)packet+sizeof(sr_ethernet_hdr_t);
+}
+sr_icmp_hdr_t *get_icmp_header(uint8_t packet*){
+  return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
+}
+
+
+
+//INCOMPLETE//
+int send_icmp_echo_reply(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface ){
+
+  /*
+  //length of packet headers
+  unsigned int length = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+sizeof(sr_ip_hdr_t);
+  //allocated enough space for all the headers, no payload really...
+  uint8_t *packet = (uint8_t*)malloc(len);
+  //default as 0's 
+  bzero(packet,len);
+  //get ethernet header
+  sr_ethernet_hdr_t *originalEthernetHeader = get_ethernet_header (originalPacket);
+  sr_ip_hdr_t       *originalIPHeader       = get_ip_header       (originalPacket);
+  sr_icmp_hdr_t     *originalIcmpHeader     = get_icmp_header     (originalPacket);
+  sr_ethernet_hdr_t *ethernetHeader         = get_ethernet_header (packet);
+  sr_ip_hdr_t *packetIPHeader               = get_ip_header       (packet);
+  sr_icmp_hdr_t *icmpHeader                 = get_icmp_header     (packet);
+  memcpy(ethernetHeader->ether_dhost,ethernetHeader->ether_shost,ETHER_ADDR_LEN);
+  memcpy(ethernetHeader->ether_shost,interface->ip,ETHER_ADDR_LEN);
+  uint32_t sourceIP = originalIPHeader->ip;
+  packetIPHeader->ip_src = interface->ip;
+  packetIPHeader->ip_dst = sourceIP;
+  icmpHeader->icmp_type=icmp_type;
+  icmpHeader->icmp_code=icmp_code;
+  icmpHeader->icmp_sum=0;
+  icmpHeader->icmp_sum=cksum(icmp_hdr,sizeof(sr_icmp_hdr_t));
+  return sr_send_packet(sr,packet,len,)
+  */
+
 }
 
