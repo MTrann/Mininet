@@ -325,11 +325,21 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
         char* interface){
+  //gets header
+  sr_ip_hdr_t ip_header* = get_ip_header(packet);
+  //check if packet is ok
+  if(!is_ip_packet_ok(ip_header,len)){
+    return;
+  }
+
  /**************************
  *To Do:
- * Check packet length
- * Validate IP header (should be ipv4)
- * Validate Checksum (cksum function in sr_utils.c)
+ *
+ *   
+ * 
+ * 
+ * 
+ *
  * Check to see if it is destine to us
  *
  * if the packet is to us check ip_p to see if it is icmp
@@ -353,5 +363,27 @@ void sr_handlepacket_ip(struct sr_instance* sr,
  *
  *
  **************************/ 
+}
+uint8_t is_ip_packet_ok(sr_ip_hdr_t *ip_header,unsigned int len){
+  //sanity check for ip packets
+  
+  //check checksum
+  uint8_t isPacketOkay = (is_ip_chksum_ok());
+  //check length
+  if(len < (sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)))
+    isPacketOkay=0;
+  return isPacketOkay;
+}
+
+uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
+  uint16_t hdrSum = ip_header->ip_sum;
+  ip_header->ip_sum=0;
+  uint8_t isChkSumOk =(cksum(ip_header,sizeof(sr_ip_hdr_t))==hdrSum);
+  ip_header->ip_sum = hdrSum;
+  return isChkSumOk;
+}
+//returns the lcoation of the IP header within the packet
+sr_ip_hdr_t *get_ip_header(uint8_t packet*){
+  return (sr_ip_hdr_t *)packet+sizeof(sr_ethernet_hdr_t);
 }
 
