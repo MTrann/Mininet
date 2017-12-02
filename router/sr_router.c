@@ -175,7 +175,7 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
       sr_packet packet;
       packet = req->packets;
       char*  interface;
-      
+
       while(packet != NULL)
       {
         interface = packet.iface;
