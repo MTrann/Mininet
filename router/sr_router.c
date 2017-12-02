@@ -404,44 +404,48 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
         sr_if *interface){
-  /*
-    Will probably need seperate methods for the two... I have an incomplete one for the echo reply... my head hurts... I'm going to bed...
-  */
+  //get ip header
   sr_ip_hdr_t ip_header = get_ip_header(packet);
+  //get protocol
   uint8_t packets_ip_protocol = ip_header->ip_p;
+  //if protocol is icmp and is an echo request, reply to it
+  //if its not echo request ignore it.
   if(packets_ip_protocol==ip_protocol_icmp)
   {
-
     sr_icmp_hdr_t *icmpHeader = get_icmp_header(packet);
-    //NEED TO CHECK THE HEADER OF ICMP HERE
-    //NEED TO CHECK THE HEADER OF ICMP HERE
-    //NEED TO CHECK THE HEADER OF ICMP HERE
-    //NEED TO CHECK THE HEADER OF ICMP HERE
-    uint8_t icmpType = icmpHeader->icmp_type;
-
-    if(icmpType==0x008){
-      //reply with echo reply. (type 0x0, code 0x0)
-
-    }
-    else{
-      return;
+    if(is_icmp_packet_ok(icmp_header,len)){
+      uint8_t icmpType = icmpHeader->icmp_type;
+      if(icmpType==icmp_type_echo_request){
+        send_icmp(sr,icmp_type_echo_reply,icmp_code_echo_reply,packet,interface);
+      }
     }
   }
   else{
-    //generate icmp port unreachable
+    //don't handle ip packet if its tcp/udp - send a t3c3 icmp message.
+    send_icmp(sr,icmp_type_destination_unreachable,icmp_code_port_unreachable,packet,interface);
   }
   
 }
 
 
 uint8_t is_ip_packet_ok(sr_ip_hdr_t *ip_header,unsigned int len){
-  //sanity check for ip packets
-  //check checksum
   uint8_t isPacketOkay = (is_ip_chksum_ok());
-  //check length
   if(len < (sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)))
     isPacketOkay=0;
   return isPacketOkay;
+}
+uint8_t is_icmp_packet_ok(sr_icmp_hdr_t *icmp_header,unsigned int len){
+  uint8_t isPacketOkay = (is_icmp_chksum_ok(icmp_header));
+  if(len<sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+sizeof(sr_icmp_hdr_t))
+    isPacketOkay=0;
+  return isPacketOkay;
+}
+uint8_t is_icmp_chksum_ok(sr_icmp_hdr_t *icmp_header){
+  uint16_t hdrSum = icmp_header->icmp_sum;
+  icmp_header->icmp_sum=0;
+  uint8_t isChkSumOk = (cksum(icmp_header,sizeof(sr_icmp_hdr_t))==hdrSum);
+  icmp_header->icmp_sum=hdrSum;
+  return isChkSumOk;
 }
 
 uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
@@ -465,33 +469,107 @@ sr_icmp_hdr_t *get_icmp_header(uint8_t packet*){
 
 
 //INCOMPLETE//
-int send_icmp_echo_reply(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface ){
+int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface){
 
-  /*
-  //length of packet headers
-  unsigned int length = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+sizeof(sr_ip_hdr_t);
-  //allocated enough space for all the headers, no payload really...
-  uint8_t *packet = (uint8_t*)malloc(len);
-  //default as 0's 
-  bzero(packet,len);
-  //get ethernet header
-  sr_ethernet_hdr_t *originalEthernetHeader = get_ethernet_header (originalPacket);
-  sr_ip_hdr_t       *originalIPHeader       = get_ip_header       (originalPacket);
-  sr_icmp_hdr_t     *originalIcmpHeader     = get_icmp_header     (originalPacket);
-  sr_ethernet_hdr_t *ethernetHeader         = get_ethernet_header (packet);
-  sr_ip_hdr_t *packetIPHeader               = get_ip_header       (packet);
-  sr_icmp_hdr_t *icmpHeader                 = get_icmp_header     (packet);
-  memcpy(ethernetHeader->ether_dhost,ethernetHeader->ether_shost,ETHER_ADDR_LEN);
-  memcpy(ethernetHeader->ether_shost,interface->ip,ETHER_ADDR_LEN);
-  uint32_t sourceIP = originalIPHeader->ip;
-  packetIPHeader->ip_src = interface->ip;
-  packetIPHeader->ip_dst = sourceIP;
-  icmpHeader->icmp_type=icmp_type;
-  icmpHeader->icmp_code=icmp_code;
-  icmpHeader->icmp_sum=0;
-  icmpHeader->icmp_sum=cksum(icmp_hdr,sizeof(sr_icmp_hdr_t));
-  return sr_send_packet(sr,packet,len,)
-  */
+  //Create an empty packet with the size depending on the type of icmp message.
+  unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+;
+  uint8_t *newPacket;
+  switch(icmp_type){
+    case(icmp_type_destination_unreachable):
+    case(icmp_type_time_exceeded):
+    case(icmp_type_echo_request):
+      len +=sizeof(sr_icmp_t3_hdr_t);
+      break;
+    case(icmp_type_echo_reply):
+      len += sizeof(sr_icmp_hdr_t)
+      break;
+    default:
+      return -1;
+  }
+  *newPacket = (*uint8_t)malloc(len);
+  bzero(newPacket,len);
+  
+  //ICMP is wrapped by IP which is wrapped by Ethernet.
+  //Constructing from Ethernet -> ICMP
+  //get Ethernet and IP headers, icmp will be split up at the end by type.
+  sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
+  sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
+  sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
+  sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
+  //get the interface so we can have address for ethernet header source host
+
+  //Construct Ethernet Header
+  struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_src);
+  memcpy(newEthernetHeader->ether_dhost,recievedEthernetHeader->ether_shost,ETHER_ADDR_LEN);
+  memcpy(newEthernetHeader->ether_shost,outgoingInterface->addr,ETHER_ADDR_LEN);
+  //htons: host to network short
+  newEthernetHeader->ether_type = htons(ethertype_ip);
+  //newEthernetHeader->ether_dhost = recievedEthernetHeader->ether_shost;
+  //newEthernetHeader->ether_shost = outgoingInterface->addr;
+
+
+  //Construct IP header
+  //need to fill in
+  newIPHeader->ip_hl = 4;
+  newIPHeader->ip_v=4;
+  newIPHeader->ip_tos = originalIPHeader->ip_tos;
+  newIPHeader->ip_len = len-sizeof(sr_ethernet_hdr_t);
+  newIPHeader->ip_id = 0; //doesn't matter since we are not fragmenting the datagram
+  newIPHeader->ip_off = IP_DF; //IP_DF is found in sr_protocol.h
+  newIPHeader->ip_ttl = INIT_TTL; //INIT_TTL is found in sr_router.h
+  newIPHeader->ip_p = ip_protocol_icmp; //ip_protocol_icmp is found in sr_protocol.h
+  newIPHeader->src = interface->ip;
+  newIPHeader->dst = originalIPHeader->ip_src;
+  //ip_hl (4)
+  //ip_v (4)
+  //ip_tos (get from originalIPHeader)
+  //ip_len (length-ethernethdr)
+  //ip_id (0)
+  //ip_off IP_DF(dont fragment)
+  //ip_ttl INIT_TTL
+  //ip_p ip_protocol_icmp
+  //ip_sum (cksum at end)
+  //ip_src (from interface - ip)
+  //ip_dst = (get from originalIPHeader (ip_src))
+
+  //Construct ICMP header (SPLIT!!!)
+
+
+
 
 }
+
+struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t destination) {
+  struct sr_rt* routingTable_walker = sr->routing_table; 
+  while(routingTable_walker) {
+    uint32_t d1 = routingTable_walker->mask.s_addr & destination;
+    if(d1 == routingTable_walker->dest.s_addr)
+       return sr_get_interface(sr, routingTable_walker->interface);
+    routingTable_walker = routingTable_walker->next;
+  }
+  return NULL;
+}
+
+//sr instance the simple router
+//icmp_type
+//icmp_code
+//originalPacket
+//sr_if interface - the interface it was recieved on.
+//check the type
+
+
+//https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
+enum sr_icmp_type{
+  icmp_type_destination_unreachable = 0x0003,
+  icmp_type_echo_reply = 0x0,
+  icmp_type_echo_request = 0x0008,
+  icmp_type_time_exceeded = 0x00b
+};
+enum sr_icmp_code{
+  icmp_code_echo_reply = 0x0,
+  icmp_code_port_unreachable=0x0003,
+  icmp_code_echo_request = 0x0,
+  icmp_code_TTL_expired = 0x0,
+  icmp_code_host_unreachable = 0x0001
+};
 
