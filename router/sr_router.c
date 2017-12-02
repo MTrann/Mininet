@@ -188,8 +188,8 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
 
       /*********************************************************************/
      struct sr_packet *curr_packet = reg->packet;
-     printf("Send ICMP host unreachable packet");
      while(curr_packet != NULL){
+         printf("Send ICMP host unreachable packet");
          send_icmp(sr, 3, 0, curr_packet -> buf, curr_packet -> iface);
          curr_packet = curr_packet -> next;
      } 
