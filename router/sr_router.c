@@ -321,6 +321,7 @@ void sr_handlepacket(struct sr_instance* sr,
       fprintf(stderr, "Packet type Unknown, dropping.", );
   }
 }
+
 void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
@@ -331,38 +332,34 @@ void sr_handlepacket_ip(struct sr_instance* sr,
   if(!is_ip_packet_ok(ip_header,len)){
     return;
   }
-
- /**************************
- *To Do:
- *
- *   
- * 
- * 
- * 
- *
- * Check to see if it is destine to us
- *
- * if the packet is to us check ip_p to see if it is icmp
- *  if it is icmp check the type
- *    if the type is 8 generate a echo reply (type 0)
- * if the packet is not icmp, drop the packet. by generating an icmp port unreachable (type3, code3)
- *
- *
- * if the packet is not to us
- *  check ip_ttl, if TTL<=1 send ICMP time exceeded (type 11, code 0)
- *  look up next-hop address by doing a LPM on the routing table using the packet's destination address
- *    if it does not exist 
- *       send an icmp port unreachable (type3, code 3)
- *    if it does exist
- *        determine outgoing interface and next-hop MAC address
- *        if necessary send ARP request to determine MAC address
- *        encapsulate  IP datagram in ethernet packet
- *        forward packet to outgoing interface
- *
- *
- *
- *
- **************************/ 
+  //walk through our routers interfaces and see if the ip matches with the packet headers ip destination
+  struct sr_if *interfaces = sr->if_list;
+  while(interfaces){
+    if(itnerfaces->ip==ip_header->ip_dst){
+      //It matches!
+      //handle the packet
+      //    check if the packet is icmp - check ip_p
+      //     if it is icmp check the type
+      //     if it is type 8 generate an echo reply (type 0)
+      //     if the packet is not icmp generate an icmp port unreachable.
+      return;
+    }
+    interfaces = interfaces->next;
+    //Packet is not ours
+      //check ttl
+      //if ttl is less than or equal to 1
+        //send an ICMP time exceeded (type 11 code 0)
+      //else
+        //forward the packet
+          //look up next hop address by doing a LPM on the routing table using the packet's destination address
+          //if it does not exist
+            //send an icmp port unreachable (type3, code 3)
+          //if it does exist
+            //determine outgoing interface and next-hop MAC address
+              //it might be necessary to send ARP request to determine MAC address
+            //encapsulate IP datagram in ethernet packet
+            //forward packet to outgoing interface
+  }
 }
 uint8_t is_ip_packet_ok(sr_ip_hdr_t *ip_header,unsigned int len){
   //sanity check for ip packets
