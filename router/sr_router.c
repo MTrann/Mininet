@@ -314,7 +314,7 @@ More indepth:
 
   unfinished:
     sr_handlepacket_ip
-    sr_forward_packet
+    sr_forward_handler
   Need:
     ???
 
@@ -329,8 +329,8 @@ More indepth:
 Dependencies:
 
   sr_handlepacket_ip
-    sr_forward_packet
-  sr_forward_packet
+    sr_forward_handler
+  sr_forward_handler
     ???
     
 */
@@ -381,22 +381,51 @@ void sr_handlepacket_ip(struct sr_instance* sr,
       send_icmp(sr,icmp_type_time_exceeded,icmp_code_TTL_expired,packet,interfaces);
     }
     else{
-      sr_forward_packet(sr,packet,len,interface);
+      ip_header->ip_ttl = ip_header->ip_ttl-1;
+      sr_forward_handler(sr,packet,len,interface);
     }
+  }
+}
+void sr_forward_handler(struct sr_instance* sr,
+        uint8_t *packet,
+        unsigned int len,
+        sr_if *interface){
+
+  sr_ip_hdr_t *recievedIPHeader = get_ip_header(packet);
+  struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_dst);
+  if(outgoingInterface){
+    struct sr_arpentry *entryToUse = sr_arpcache_lookup(&sr->cache,recievedIPHeader->ip_dst);
+    if(entryToUse){
+      sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
+      free(entryToUse);
+      return;
+    }
+    else{
+      sr_arpreq *request = sr_arpcache_queuereq(&sr->cache,recievedIPHeader->ip_dst,packet,len,outgoingInterface->name);
+      sr_handle_arpreq(sr,request);
+      return;
+    }
+
+
+  }
+  else{
+    send_icmp(sr,icmp_type_destination_unreachable,icmp_code_net_unreachable,*packet,interface);
   }
 }
 void sr_forward_packet(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        sr_if *interface){
-  //look up next hop address by doing a LPM on the routing table using the packet's destination address
-  //if it does not exist
-    //send_icmp(sr,icmp_type_destination_unreachable,icmp_code_port_unreachable)
-  //if it does exist
-    //determine outgoing itnerface and next-hop MAC address
-      //it might be necessary to send ARP request to determine MAC address
-    //encapsulate IP datagram in ethernet packet
-    //forward packet to outgoing interface
+        uint8_t macAddress,
+        struct  sr_if *outgoingInterface){
+  sr_ethernet_hdr_t *ethernetHeader = get_ethernet_header(packet);
+  sr_ip_hdr_t *IPHeader = get_ip_header(packet);
+  memcpy(ethernetHeader->ether_dhost,macAddress,ETHER_ADDR_LEN);
+  memcpy(ethernetHeader->ether_shost,outgoingInterface->addr,ETHER_ADDR_LEN);
+  IPHeader->ip_sum=0;
+  IPHeader->ip_sum=cksum(IPHeader,sizeof(sr_ip_hdr_t));
+  sr_send_packet(sr,packet,len,outgoingInterface->name);
+        
+
 
 }
 void sr_handle_ip_packet_reception(struct sr_instance* sr,
@@ -568,6 +597,7 @@ enum sr_icmp_type{
 enum sr_icmp_code{
   icmp_code_echo_reply = 0x0,
   icmp_code_port_unreachable=0x0003,
+  icmp_code_net_unreachable=0x0,
   icmp_code_echo_request = 0x0,
   icmp_code_TTL_expired = 0x0,
   icmp_code_host_unreachable = 0x0001
