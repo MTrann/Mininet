@@ -172,15 +172,29 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
       /* packets waiting on this request                                   */
 
 
+      sr_packet packet;
+      packet = req->packets;
+      char*  interface;
+
+      while(packet != NULL)
+      {
+        interface = packet.iface;
+
+        sr_send_packet(sr, packet, packet->len, interface);
+        packet = packet.next;
+      }
+
+
+
       /*********************************************************************/
-       struct sr_packet *curr_packet = reg->packet;
-     uint8_t icmp_type = 0x0003;
+     struct sr_packet *curr_packet = reg->packet;
      while(curr_packet != NULL){
-         printf("Send ICMP host unreachable packet");
-         send_icmp(sr, icmp_type, 0, curr_packet -> buf, curr_packet -> iface);
+         send_icmp_packe(sr,curr_packet, 3,0);
          curr_packet = curr_packet -> next;
-     } 
-     sr_arpreq_destroy(&(sr->cache), req);
+     }
+        
+      
+      sr_arpreq_destroy(&(sr->cache), req);
     }
     else
     { 
@@ -254,17 +268,6 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
       /*********************************************************************/
       /* TODO: send all packets on the req->packets linked list            */
 
-      sr_packet packet;
-      packet = req->packets;
-      char*  interface;
-
-      while(packet != NULL)
-      {
-        interface = packet.iface;
-
-        sr_send_packet(sr, packet, packet->len, interface);
-        packet = packet.next;
-      }
 
 
       /*********************************************************************/
