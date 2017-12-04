@@ -459,6 +459,9 @@ struct sr_ip_hdr_t *get_ip_header(uint8_t *packet){
 struct sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
   return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
 }
+struct sr_icmp_t3_hdr_t *get_icmp_t3_header(uint8_t *packet){
+	return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
+};
 
 
 
@@ -483,10 +486,10 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   /*ICMP is wrapped by IP which is wrapped by Ethernet.
   Constructing from Ethernet -> ICMP
   get Ethernet and IP headers, icmp will be split up at the end by type.*/
-  struct sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
-  struct sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
-  struct sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
-  struct sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
+  sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
+  sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
+  sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
+  sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
   
 
   /*Construct Ethernet Header
@@ -519,7 +522,7 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
     case(0x0003):
     case(0x000b):
     /*case(0x0008):*/
-    struct sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
+    sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_t3_header(newPacket);
     newICMPT3Header->icmp_type = icmp_type;
     newICMPT3Header->icmp_code = icmp_code;
     memcpy(newICMPT3Header->data,recievedIPHeader,ICMP_DATA_SIZE);
@@ -529,7 +532,7 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
     return toReturn;
       break;
     case(0x0):
-    struct sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
+    sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
     newICMPHeader->icmp_type = icmp_type;
     newICMPHeader->icmp_code = icmp_code;
     newICMPHeader->icmp_sum = 0;
