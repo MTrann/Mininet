@@ -91,6 +91,7 @@ sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet);
 sr_ip_hdr_t *get_ip_header(uint8_t *packet);
 sr_icmp_hdr_t *get_icmp_header(uint8_t *packet);
 sr_icmp_t3_hdr_t *get_icmp_t3_header(uint8_t *packet);
+struct sr_if* get_interface_for_destination(struct sr_instance*, uint32_t);
 
 
 
