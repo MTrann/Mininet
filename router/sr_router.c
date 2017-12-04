@@ -372,7 +372,7 @@ void sr_forward_handler(struct sr_instance* sr,
     }
     else{
       struct sr_arpreq *request = sr_arpcache_queuereq(&sr->cache,recievedIPHeader->ip_dst,packet,len,outgoingInterface->name);
-      sr_handle_arpreq(sr,request);
+      sr_handle_arpreq(sr,request,outgoingInterface);
       return;
     }
 
