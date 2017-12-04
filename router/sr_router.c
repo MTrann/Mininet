@@ -266,7 +266,7 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
       {
         interface = packet->iface;
 
-        sr_send_packet(sr, packet, packet->len, interface);
+        sr_send_packet(sr, packet->buf, packet->len, interface);
         packet = packet->next;
       }
 
