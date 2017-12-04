@@ -18,11 +18,4 @@ In file included from sr_router.c:22:0:
 sr_router.h:83:6: note: previous declaration of ‘sr_forward_packet’ was here
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
-sr_router.c: In function ‘send_icmp’:
-sr_router.c:529:5: error: a label can only be part of a statement and a declaration is not a statement
-     sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_t3_header(newPacket);
-     ^
-sr_router.c:539:5: error: a label can only be part of a statement and a declaration is not a statement
-     sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
-     ^
 make: *** [sr_router.o] Error 1
