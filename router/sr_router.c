@@ -344,7 +344,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
     interfaces = interfaces->next;
     if(ip_header->ip_ttl<=1)
     {
-      send_icmp(sr,icmp_type_time_exceeded,icmp_code_TTL_expired,packet,interfaces);
+      send_icmp(sr,0x000b,0x0,packet,interfaces);
     }
     else{
       ip_header->ip_ttl = ip_header->ip_ttl-1;
@@ -375,7 +375,7 @@ void sr_forward_handler(struct sr_instance* sr,
 
   }
   else{
-    send_icmp(sr,icmp_type_destination_unreachable,icmp_code_net_unreachable,*packet,interface);
+    send_icmp(sr,0x0003,0x0,*packet,interface);
   }
 }
 void sr_forward_packet(struct sr_instance* sr,
@@ -409,14 +409,14 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
     sr_icmp_hdr_t *icmpHeader = get_icmp_header(packet);
     if(is_icmp_packet_ok(icmp_header,len)){
       uint8_t icmpType = icmpHeader->icmp_type;
-      if(icmpType==icmp_type_echo_request){
-        send_icmp(sr,icmp_type_echo_reply,icmp_code_echo_reply,packet,interface);
+      if(icmpType==0x0008){
+        send_icmp(sr,0x0,0x0,packet,interface);
       }
     }
   }
   else{
     /*don't handle ip packet if its tcp/udp - send a t3c3 icmp message.*/
-    send_icmp(sr,icmp_type_destination_unreachable,icmp_code_port_unreachable,packet,interface);
+    send_icmp(sr,0x0003,0x0003,packet,interface);
   }
   
 }
@@ -468,12 +468,12 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+;
   uint8_t *newPacket;
   switch(icmp_type){
-    case(icmp_type_destination_unreachable):
-    case(icmp_type_time_exceeded):
-    /*case(icmp_type_echo_request):*/
+    case(0x0003):
+    case(0x000b):
+    /*case(0x0008):*/
       len +=sizeof(sr_icmp_t3_hdr_t);
       break;
-    case(icmp_type_echo_reply):
+    case(0x0):
       len += sizeof(sr_icmp_hdr_t)
       break;
     default:
@@ -517,9 +517,9 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
 
   /*Construct ICMP header and send!*/
   switch(icmp_type){
-    case(icmp_type_destination_unreachable):
-    case(icmp_type_time_exceeded):
-    /*case(icmp_type_echo_request):*/
+    case(0x0003):
+    case(0x000b):
+    /*case(0x0008):*/
     sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
     newICMPT3Header->icmp_type = icmp_type;
     newICMPT3Header->icmp_code = icmp_code;
@@ -529,7 +529,7 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
     int toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
     return toReturn;
       break;
-    case(icmp_type_echo_reply):
+    case(0x0):
     sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
     newICMPHeader->icmp_type = icmp_type;
     newICMPHeader->icmp_code = icmp_code;
@@ -553,19 +553,3 @@ struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t des
   }
   return NULL;
 }
-/*https:/*en.wikipedia.org/wiki/Internet_Control_Message_Protocol*/
-enum sr_icmp_type{
-  icmp_type_destination_unreachable = 0x0003,
-  icmp_type_echo_reply = 0x0,
-  icmp_type_echo_request = 0x0008,
-  icmp_type_time_exceeded = 0x00b
-};
-enum sr_icmp_code{
-  icmp_code_echo_reply = 0x0,
-  icmp_code_port_unreachable=0x0003,
-  icmp_code_net_unreachable=0x0,
-  icmp_code_echo_request = 0x0,
-  icmp_code_TTL_expired = 0x0,
-  icmp_code_host_unreachable = 0x0001
-};
-
