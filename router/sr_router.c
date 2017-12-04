@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+
+
+>>>>>>> 6baca048a15feee03f84bf0015f4d15a2aa3e476
 #include <stdio.h>
 #include <assert.h>
 #include <stdlib.h>
