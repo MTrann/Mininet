@@ -7,12 +7,12 @@ sr_router.h:84:92: error: unknown type name ‘sr_if’
  void sr_handle_ip_packet_reception(struct sr_instance* sr,uint8_t *packet,unsigned int len,sr_if *interface);
                                                                                             ^
 sr_router.c: In function ‘sr_handle_arpreq’:
-sr_router.c:182:38: error: ‘packets’ undeclared (first use in this function)
-          send_icmp(sr,0x0003,0x0003,*packets,interface);
-                                      ^
-sr_router.c:182:38: note: each undeclared identifier is reported only once for each function it appears in
+sr_router.c:182:37: error: ‘packet’ undeclared (first use in this function)
+          send_icmp(sr,0x0003,0x0003,packet,interface);
+                                     ^
+sr_router.c:182:37: note: each undeclared identifier is reported only once for each function it appears in
 sr_router.c:182:10: warning: passing argument 5 of ‘send_icmp’ from incompatible pointer type [enabled by default]
-          send_icmp(sr,0x0003,0x0003,*packets,interface);
+          send_icmp(sr,0x0003,0x0003,packet,interface);
           ^
 In file included from sr_router.c:22:0:
 sr_router.h:89:5: note: expected ‘struct sr_if *’ but argument is of type ‘char *’
