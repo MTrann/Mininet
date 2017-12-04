@@ -385,7 +385,7 @@ void sr_forward_handler(struct sr_instance* sr,
 void sr_forward_packet(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        uint8_t* macAddress,
+        uint8_t macAddress,
         struct  sr_if *outgoingInterface){
   sr_ethernet_hdr_t *ethernetHeader = get_ethernet_header(packet);
   sr_ip_hdr_t *IPHeader = get_ip_header(packet);
