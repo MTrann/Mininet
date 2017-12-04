@@ -1,11 +1,7 @@
 sr_router.c: In function ‘sr_handle_arpreq’:
-sr_router.c:183:10: warning: passing argument 4 of ‘send_icmp’ from incompatible pointer type [enabled by default]
-          send_icmp(sr,0x0003,0x0003,curr_packet,out_iface);
-          ^
-In file included from sr_router.c:22:0:
-sr_router.h:89:5: note: expected ‘uint8_t *’ but argument is of type ‘struct sr_packet *’
- int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
-     ^
+sr_router.c:183:9: error: expected expression before ‘/’ token
+         // send_icmp(sr,0x0003,0x0003,curr_packet,out_iface);
+         ^
 sr_router.c:179:13: warning: unused variable ‘interface’ [-Wunused-variable]
       char*  interface;
              ^
@@ -23,12 +19,6 @@ sr_router.c:369:7: warning: passing argument 5 of ‘sr_forward_packet’ from i
 In file included from sr_router.c:22:0:
 sr_router.h:83:6: note: expected ‘struct sr_if *’ but argument is of type ‘unsigned char *’
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
-      ^
-sr_router.c:375:7: error: too few arguments to function ‘sr_handle_arpreq’
-       sr_handle_arpreq(sr,request);
-       ^
-sr_router.c:162:6: note: declared here
- void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
       ^
 sr_router.c:382:5: warning: passing argument 4 of ‘send_icmp’ makes pointer from integer without a cast [enabled by default]
      send_icmp(sr,0x0003,0x0,*packet,interface);
