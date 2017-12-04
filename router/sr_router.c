@@ -355,7 +355,7 @@ void sr_handlepacket_ip(struct sr_instance* sr,
 void sr_forward_handler(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        sr_if *interface){
+        struct sr_if *interface){
 
   sr_ip_hdr_t *recievedIPHeader = get_ip_header(packet);
   struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_dst);
@@ -381,7 +381,7 @@ void sr_forward_handler(struct sr_instance* sr,
 void sr_forward_packet(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        uint8_t macAddress,
+        uint8_t* macAddress,
         struct  sr_if *outgoingInterface){
   sr_ethernet_hdr_t *ethernetHeader = get_ethernet_header(packet);
   sr_ip_hdr_t *IPHeader = get_ip_header(packet);
@@ -397,7 +397,7 @@ void sr_forward_packet(struct sr_instance* sr,
 void sr_handle_ip_packet_reception(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        sr_if *interface){
+        struct sr_if *interface){
   /*get ip header*/
   sr_ip_hdr_t ip_header = get_ip_header(packet);
   /*get protocol*/
