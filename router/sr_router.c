@@ -450,17 +450,17 @@ uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
   return isChkSumOk;
 }
 /*returns the lcoation of the IP header within the packet*/
-struct sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet){
+sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet){
   return (sr_ethernet_hdr_t *)packet;
 }
-struct sr_ip_hdr_t *get_ip_header(uint8_t *packet){
+sr_ip_hdr_t *get_ip_header(uint8_t *packet){
   return (sr_ip_hdr_t *)packet+sizeof(sr_ethernet_hdr_t);
 }
-struct sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
+sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
   return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
 }
-struct sr_icmp_t3_hdr_t *get_icmp_t3_header(uint8_t *packet){
-	return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
+sr_icmp_t3_hdr_t *get_icmp_t3_header(uint8_t *packet){
+	return (sr_icmp_t3_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
 };
 
 
