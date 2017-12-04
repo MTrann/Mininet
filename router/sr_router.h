@@ -87,6 +87,10 @@ uint8_t is_icmp_packet_ok(sr_icmp_hdr_t *icmp_header,unsigned int len);
 uint8_t is_icmp_chksum_ok(sr_icmp_hdr_t *icmp_header);
 uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header);
 int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
+sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet);
+sr_ip_hdr_t *get_ip_header(uint8_t *packet);
+sr_icmp_hdr_t *get_icmp_header(uint8_t *packet);
+sr_icmp_t3_hdr_t *get_icmp_t3_header(uint8_t *packet);
 
 
 
