@@ -515,10 +515,10 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   newIPHeader->ip_v=4;
   newIPHeader->ip_tos = originalIPHeader->ip_tos;
   newIPHeader->ip_len = htons(len-sizeof(sr_ethernet_hdr_t));
-  newIPHeader->ip_id = 0; //doesn't matter since we are not fragmenting the datagram
-  newIPHeader->ip_off = htons(IP_DF); //IP_DF is found in sr_protocol.h
-  newIPHeader->ip_ttl = INIT_TTL; //INIT_TTL is found in sr_router.h
-  newIPHeader->ip_p = ip_protocol_icmp; //ip_protocol_icmp is found in sr_protocol.h
+  newIPHeader->ip_id = 0; /*doesn't matter since we are not fragmenting the datagram*/
+  newIPHeader->ip_off = htons(IP_DF); /*IP_DF is found in sr_protocol.h*/
+  newIPHeader->ip_ttl = INIT_TTL; /*INIT_TTL is found in sr_router.h*/
+  newIPHeader->ip_p = ip_protocol_icmp; /*ip_protocol_icmp is found in sr_protocol.h*/
   newIPHeader->src = interface->ip;
   newIPHeader->dst = originalIPHeader->ip_src;
   newIPHeader->ip_sum = 0;
@@ -562,7 +562,7 @@ struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t des
   }
   return NULL;
 }
-/*https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol*/
+/*https:/*en.wikipedia.org/wiki/Internet_Control_Message_Protocol*/
 enum sr_icmp_type{
   icmp_type_destination_unreachable = 0x0003,
   icmp_type_echo_reply = 0x0,
