@@ -78,7 +78,7 @@ void sr_print_if_list(struct sr_instance* );
 
 void sr_handlepacket(struct sr_instance* sr,uint8_t * packet/* lent */,unsigned int len, char* interface/* lent */);
 void sr_waitforarp(struct sr_instance *sr, uint8_t *pkt,unsigned int len, uint32_t next_hop_ip, struct sr_if *out_iface);
-void sr_handlepacket_ip(struct sr_instance* sr,uint8_t *packet,unsigned int len,struct* sr_if interface);
+void sr_handlepacket_ip(struct sr_instance* sr,uint8_t *packet,unsigned int len,struct sr_if *interface);
 void sr_forward_handler(struct sr_instance* sr,uint8_t *packet,unsigned int len,struct sr_if *interface);
 void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
 void sr_handle_ip_packet_reception(struct sr_instance* sr,uint8_t *packet,unsigned int len,struct sr_if *interface);
