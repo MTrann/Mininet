@@ -521,12 +521,14 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   newIPHeader->ip_sum = 0;
   newIPHeader->ip_sum=cksum(newIPHeader,len-sizeof(sr_ethernet_hdr_t));
   int toReturn;
+  sr_icmp_t3_hdr_t *newICMPT3Header = NULL;
+  sr_icmp_hdr_t *newICMPHeader = NULL;
   /*Construct ICMP header and send!*/
   switch(icmp_type){
     case(0x0003):
     case(0x000b):
     /*case(0x0008):*/
-    sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_t3_header(newPacket);
+    newICMPT3Header = get_icmp_t3_header(newPacket);
     newICMPT3Header->icmp_type = icmp_type;
     newICMPT3Header->icmp_code = icmp_code;
     memcpy(newICMPT3Header->data,recievedIPHeader,ICMP_DATA_SIZE);
@@ -536,7 +538,7 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
     return toReturn;
       break;
     case(0x0):
-    sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
+    newICMPHeader = get_icmp_header(newPacket);
     newICMPHeader->icmp_type = icmp_type;
     newICMPHeader->icmp_code = icmp_code;
     newICMPHeader->icmp_sum = 0;
