@@ -3,12 +3,15 @@ sr_router.h:84:92: error: unknown type name ‘sr_if’
  void sr_handle_ip_packet_reception(struct sr_instance* sr,uint8_t *packet,unsigned int len,sr_if *interface);
                                                                                             ^
 sr_router.c: In function ‘sr_handle_arpreq’:
-sr_router.c:182:37: error: ‘packets’ undeclared (first use in this function)
-          send_icmp(sr,0x0003,0x0003,packets,interface);
-                                     ^
-sr_router.c:182:37: note: each undeclared identifier is reported only once for each function it appears in
+sr_router.c:182:10: warning: passing argument 4 of ‘send_icmp’ from incompatible pointer type [enabled by default]
+          send_icmp(sr,0x0003,0x0003,curr_packet,interface);
+          ^
+In file included from sr_router.c:22:0:
+sr_router.h:89:5: note: expected ‘uint8_t *’ but argument is of type ‘struct sr_packet *’
+ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
+     ^
 sr_router.c:182:10: warning: passing argument 5 of ‘send_icmp’ from incompatible pointer type [enabled by default]
-          send_icmp(sr,0x0003,0x0003,packets,interface);
+          send_icmp(sr,0x0003,0x0003,curr_packet,interface);
           ^
 In file included from sr_router.c:22:0:
 sr_router.h:89:5: note: expected ‘struct sr_if *’ but argument is of type ‘char *’
@@ -95,6 +98,7 @@ sr_router.c:405:42: error: invalid type argument of ‘->’ (have ‘sr_ip_hdr_
 sr_router.c:411:26: error: ‘icmp_header’ undeclared (first use in this function)
      if(is_icmp_packet_ok(icmp_header,len)){
                           ^
+sr_router.c:411:26: note: each undeclared identifier is reported only once for each function it appears in
 sr_router.c: In function ‘is_ip_packet_ok’:
 sr_router.c:427:3: error: too few arguments to function ‘is_ip_chksum_ok’
    uint8_t isPacketOkay = (is_ip_chksum_ok());
