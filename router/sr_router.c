@@ -317,18 +317,19 @@ void sr_handlepacket(struct sr_instance* sr,
       break;
     case(ethertype_arp):
       sr_handlepacket_arp(sr,packet,len,simpleRouterInterface);
-      break
+      break;
     default:
       fprintf(stderr, "Packet type Unknown, dropping.", );
+      
   }
 }
 
 void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
-        char* interface){
+        struct sr_if* interface){
   /*gets header*/
-  sr_ip_hdr_t ip_header* = get_ip_header(packet);
+  sr_ip_hdr_t* ip_header = get_ip_header(packet);
   /*check if packet is ok*/
   if(!is_ip_packet_ok(ip_header,len)){
     return;
@@ -367,7 +368,7 @@ void sr_forward_handler(struct sr_instance* sr,
       return;
     }
     else{
-      sr_arpreq *request = sr_arpcache_queuereq(&sr->cache,recievedIPHeader->ip_dst,packet,len,outgoingInterface->name);
+      struct sr_arpreq *request = sr_arpcache_queuereq(&sr->cache,recievedIPHeader->ip_dst,packet,len,outgoingInterface->name);
       sr_handle_arpreq(sr,request);
       return;
     }
