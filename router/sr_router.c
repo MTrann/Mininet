@@ -450,13 +450,13 @@ uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
   return isChkSumOk;
 }
 /*returns the lcoation of the IP header within the packet*/
-sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet){
+struct sr_ethernet_hdr_t *get_ethernet_header(uint8_t *packet){
   return (sr_ethernet_hdr_t *)packet;
 }
-sr_ip_hdr_t *get_ip_header(uint8_t *packet){
+struct sr_ip_hdr_t *get_ip_header(uint8_t *packet){
   return (sr_ip_hdr_t *)packet+sizeof(sr_ethernet_hdr_t);
 }
-sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
+struct sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
   return (sr_icmp_hdr_t *)packet+sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
 }
 
@@ -465,8 +465,7 @@ sr_icmp_hdr_t *get_icmp_header(uint8_t *packet){
 /*COMPLETE*/
 int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface){
   /*Create an empty packet with the size depending on the type of icmp message.*/
-  unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+;
-  uint8_t *newPacket;
+  unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t);
   switch(icmp_type){
     case(0x0003):
     case(0x000b):
@@ -474,20 +473,20 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
       len +=sizeof(sr_icmp_t3_hdr_t);
       break;
     case(0x0):
-      len += sizeof(sr_icmp_hdr_t)
+      len += sizeof(sr_icmp_hdr_t);
       break;
     default:
       return -1;
   }
-  *newPacket = (*uint8_t)malloc(len);
+  uint8_t *newPacket = (uint8_t*)malloc(len);
   bzero(newPacket,len);
   /*ICMP is wrapped by IP which is wrapped by Ethernet.
   Constructing from Ethernet -> ICMP
   get Ethernet and IP headers, icmp will be split up at the end by type.*/
-  sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
-  sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
-  sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
-  sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
+  struct sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
+  struct sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
+  struct sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
+  struct sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
   
 
   /*Construct Ethernet Header
@@ -504,38 +503,38 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   need to fill in*/
   newIPHeader->ip_hl = 4;
   newIPHeader->ip_v=4;
-  newIPHeader->ip_tos = originalIPHeader->ip_tos;
+  newIPHeader->ip_tos = recievedIPHeader->ip_tos;
   newIPHeader->ip_len = htons(len-sizeof(sr_ethernet_hdr_t));
   newIPHeader->ip_id = 0; /*doesn't matter since we are not fragmenting the datagram*/
   newIPHeader->ip_off = htons(IP_DF); /*IP_DF is found in sr_protocol.h*/
   newIPHeader->ip_ttl = INIT_TTL; /*INIT_TTL is found in sr_router.h*/
   newIPHeader->ip_p = ip_protocol_icmp; /*ip_protocol_icmp is found in sr_protocol.h*/
-  newIPHeader->src = interface->ip;
-  newIPHeader->dst = originalIPHeader->ip_src;
+  newIPHeader->ip_src = interface->ip;
+  newIPHeader->ip_dst = recievedIPHeader->ip_src;
   newIPHeader->ip_sum = 0;
   newIPHeader->ip_sum=cksum(newIPHeader,len-sizeof(sr_ethernet_hdr_t));
-
+  int toReturn;
   /*Construct ICMP header and send!*/
   switch(icmp_type){
     case(0x0003):
     case(0x000b):
     /*case(0x0008):*/
-    sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
+    struct sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
     newICMPT3Header->icmp_type = icmp_type;
     newICMPT3Header->icmp_code = icmp_code;
-    memcpy(newICMPT3Header->data,originalIPHeader,ICMP_DATA_SIZE);
+    memcpy(newICMPT3Header->data,recievedIPHeader,ICMP_DATA_SIZE);
     newICMPT3Header->icmp_sum = 0;
     newICMPT3Header->icmp_sum = cksum(newICMPT3Header,len-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
-    int toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
+    toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
     return toReturn;
       break;
     case(0x0):
-    sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
+    struct sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
     newICMPHeader->icmp_type = icmp_type;
     newICMPHeader->icmp_code = icmp_code;
     newICMPHeader->icmp_sum = 0;
     newICMPHeader->icmp_sum = cksum(newICMPHeader,len-sizeof(sr_ethernet_hdr_t)-sizeof(sr_ip_hdr_t));
-    int toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
+    toReturn = sr_send_packet(sr,newPacket,len,outgoingInterface->name);
     return toReturn;
       break;
     default:
