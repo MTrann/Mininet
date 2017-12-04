@@ -366,7 +366,7 @@ void sr_forward_handler(struct sr_instance* sr,
   if(outgoingInterface){
     struct sr_arpentry *entryToUse = sr_arpcache_lookup(&sr->cache,recievedIPHeader->ip_dst);
     if(entryToUse){
-      sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
+      sr_forward_packet(sr,packet,len,entryToUse->mac,outgoingInterface);
       free(entryToUse);
       return;
     }
@@ -379,7 +379,7 @@ void sr_forward_handler(struct sr_instance* sr,
 
   }
   else{
-    send_icmp(sr,0x0003,0x0,*packet,interface);
+    send_icmp(sr,0x0003,0x0,packet,interface);
   }
 }
 void sr_forward_packet(struct sr_instance* sr,
@@ -403,7 +403,7 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
         unsigned int len,
         struct sr_if *interface){
   /*get ip header*/
-  sr_ip_hdr_t ip_header = get_ip_header(packet);
+  sr_ip_hdr_t *ip_header = get_ip_header(packet);
   /*get protocol*/
   uint8_t packets_ip_protocol = ip_header->ip_p;
   /*if protocol is icmp and is an echo request, reply to it
@@ -411,7 +411,7 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
   if(packets_ip_protocol==ip_protocol_icmp)
   {
     sr_icmp_hdr_t *icmpHeader = get_icmp_header(packet);
-    if(is_icmp_packet_ok(icmp_header,len)){
+    if(is_icmp_packet_ok(icmpHeader,len)){
       uint8_t icmpType = icmpHeader->icmp_type;
       if(icmpType==0x0008){
         send_icmp(sr,0x0,0x0,packet,interface);
@@ -427,7 +427,7 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
 
 
 uint8_t is_ip_packet_ok(sr_ip_hdr_t *ip_header,unsigned int len){
-  uint8_t isPacketOkay = (is_ip_chksum_ok());
+  uint8_t isPacketOkay = (is_ip_chksum_ok(ip_header));
   if(len < (sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)))
     isPacketOkay=0;
   return isPacketOkay;
