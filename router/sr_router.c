@@ -258,7 +258,7 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
     {
       /*********************************************************************/
       /* TODO: send all packets on the req->packets linked list            */
-      uint8_t *packet;
+      struct sr_packet *packet;
       packet = req->packets;
       char*  interface;
 
