@@ -1,32 +1,15 @@
 sr_router.c: In function ‘sr_handle_arpreq’:
-sr_router.c:183:9: error: expected expression before ‘/’ token
-         // send_icmp(sr,0x0003,0x0003,curr_packet,out_iface);
-         ^
 sr_router.c:179:13: warning: unused variable ‘interface’ [-Wunused-variable]
       char*  interface;
              ^
 sr_router.c: In function ‘sr_forward_handler’:
 sr_router.c:369:7: warning: passing argument 4 of ‘sr_forward_packet’ makes integer from pointer without a cast [enabled by default]
-       sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
+       sr_forward_packet(sr,packet,len,entryToUse->mac,outgoingInterface);
        ^
 In file included from sr_router.c:22:0:
-sr_router.h:83:6: note: expected ‘uint8_t’ but argument is of type ‘struct sr_if *’
+sr_router.h:83:6: note: expected ‘uint8_t’ but argument is of type ‘unsigned char *’
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
-sr_router.c:369:7: warning: passing argument 5 of ‘sr_forward_packet’ from incompatible pointer type [enabled by default]
-       sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
-       ^
-In file included from sr_router.c:22:0:
-sr_router.h:83:6: note: expected ‘struct sr_if *’ but argument is of type ‘unsigned char *’
- void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
-      ^
-sr_router.c:382:5: warning: passing argument 4 of ‘send_icmp’ makes pointer from integer without a cast [enabled by default]
-     send_icmp(sr,0x0003,0x0,*packet,interface);
-     ^
-In file included from sr_router.c:22:0:
-sr_router.h:89:5: note: expected ‘uint8_t *’ but argument is of type ‘uint8_t’
- int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
-     ^
 sr_router.c: At top level:
 sr_router.c:385:6: error: conflicting types for ‘sr_forward_packet’
  void sr_forward_packet(struct sr_instance* sr,
@@ -35,25 +18,6 @@ In file included from sr_router.c:22:0:
 sr_router.h:83:6: note: previous declaration of ‘sr_forward_packet’ was here
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
-sr_router.c: In function ‘sr_handle_ip_packet_reception’:
-sr_router.c:406:3: error: invalid initializer
-   sr_ip_hdr_t ip_header = get_ip_header(packet);
-   ^
-sr_router.c:408:42: error: invalid type argument of ‘->’ (have ‘sr_ip_hdr_t’)
-   uint8_t packets_ip_protocol = ip_header->ip_p;
-                                          ^
-sr_router.c:414:26: error: ‘icmp_header’ undeclared (first use in this function)
-     if(is_icmp_packet_ok(icmp_header,len)){
-                          ^
-sr_router.c:414:26: note: each undeclared identifier is reported only once for each function it appears in
-sr_router.c: In function ‘is_ip_packet_ok’:
-sr_router.c:430:3: error: too few arguments to function ‘is_ip_chksum_ok’
-   uint8_t isPacketOkay = (is_ip_chksum_ok());
-   ^
-In file included from sr_router.c:22:0:
-sr_router.h:88:9: note: declared here
- uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header);
-         ^
 sr_router.c: In function ‘send_icmp’:
 sr_router.c:529:5: error: a label can only be part of a statement and a declaration is not a statement
      sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_t3_header(newPacket);
