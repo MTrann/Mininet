@@ -187,11 +187,11 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
 
 
       /*********************************************************************/
-<<<<<<< HEAD
+/*<<<<<<< HEAD*/
      struct sr_packet *curr_packet = reg->packet;
      while(curr_packet != NULL){
          send_icmp_packe(sr,curr_packet, 3,0);
-=======
+/*=======*/
      struct sr_packet *curr_packet = reg->packets;
      uint8_t icmp_type_destination_unreachable = 0x0003,
      uint8_t icmp_code_net_unreachable = 0x0003,
@@ -199,7 +199,7 @@ void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
      while(curr_packet != NULL){
          printf("Send ICMP host unreachable packet");
          send_icmp(sr,icmp_type_destination_unreachable,icmp_code_net_unreachable,*packets,interface);
->>>>>>> aedcca6dca9182fb330dc30deb7857051e3d18e2
+/*>>>>>>> aedcca6dca9182fb330dc30deb7857051e3d18e2*/
          curr_packet = curr_packet -> next;
      }
         
@@ -309,41 +309,6 @@ void sr_handlepacket_arp(struct sr_instance *sr, uint8_t *pkt,
  *
  *---------------------------------------------------------------------*/
 
-
-
-
-
-
-/*
-TODO:
-overview:
-  icmp messages
-  packet forwarding
-
-More indepth:
-
-  unfinished:
-    sr_handlepacket_ip
-    sr_forward_handler
-  Need:
-    ???
-
-/////////////////////////////////////////////////////////////////////////
-//NOTE: THE NEEDED LIST IS INCOMPLETE. WE MAY NEED MORE THAN JUST THAT.// 
-//THE UNFINISHED LIST IS ALSO INCOMPLETE, ONE THE NEEDED LIST IS BEGUN //
-//THE UNFINISHED LIST WILL EXPAND.                                     //
-/////////////////////////////////////////////////////////////////////////
-//PLEASE UPDATE THE LISTS AS YOU WORK ON THE PROJECT                   //
-/////////////////////////////////////////////////////////////////////////
-
-Dependencies:
-
-  sr_handlepacket_ip
-    sr_forward_handler
-  sr_forward_handler
-    ???
-    
-*/
 void sr_handlepacket(struct sr_instance* sr,
         uint8_t * packet/* lent */,
         unsigned int len,
@@ -353,7 +318,7 @@ void sr_handlepacket(struct sr_instance* sr,
   assert(packet);
   assert(interface);
   printf("*** -> Received packet of length %d \n",len);
-  struct sr_if simpleRouterInterface* = sr_get_interface(sr,interface);
+  struct sr_if *simpleRouterInterface = sr_get_interface(sr,interface);
   uint16_t ethtype = ethertype(packet);
   switch(ethtype){
     case(ethertype_ip):
@@ -371,17 +336,17 @@ void sr_handlepacket_ip(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
         char* interface){
-  //gets header
+  /*gets header*/
   sr_ip_hdr_t ip_header* = get_ip_header(packet);
-  //check if packet is ok
+  /*check if packet is ok*/
   if(!is_ip_packet_ok(ip_header,len)){
     return;
   }
-  //walk through our routers interfaces and see if the ip matches with the packet headers ip destination
+  /*walk through our routers interfaces and see if the ip matches with the packet headers ip destination*/
   struct sr_if *interfaces = sr->if_list;
   while(interfaces){
     if(interfaces->ip==ip_header->ip_dst){
-      //it matches!
+      /*it matches!*/
       sr_handle_ip_packet_reception(sr,packet,len,interfaces);
       return;
     }
@@ -442,12 +407,12 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
         uint8_t *packet,
         unsigned int len,
         sr_if *interface){
-  //get ip header
+  /*get ip header*/
   sr_ip_hdr_t ip_header = get_ip_header(packet);
-  //get protocol
+  /*get protocol*/
   uint8_t packets_ip_protocol = ip_header->ip_p;
-  //if protocol is icmp and is an echo request, reply to it
-  //if its not echo request ignore it.
+  /*if protocol is icmp and is an echo request, reply to it
+  if its not echo request ignore it.*/
   if(packets_ip_protocol==ip_protocol_icmp)
   {
     sr_icmp_hdr_t *icmpHeader = get_icmp_header(packet);
@@ -459,7 +424,7 @@ void sr_handle_ip_packet_reception(struct sr_instance* sr,
     }
   }
   else{
-    //don't handle ip packet if its tcp/udp - send a t3c3 icmp message.
+    /*don't handle ip packet if its tcp/udp - send a t3c3 icmp message.*/
     send_icmp(sr,icmp_type_destination_unreachable,icmp_code_port_unreachable,packet,interface);
   }
   
@@ -493,7 +458,7 @@ uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header){
   ip_header->ip_sum = hdrSum;
   return isChkSumOk;
 }
-//returns the lcoation of the IP header within the packet
+/*returns the lcoation of the IP header within the packet*/
 sr_ethernet_hdr_t *get_ethernet_header(uint8_t packet*){
   return (sr_ethernet_hdr_t *)packet;
 }
@@ -506,15 +471,15 @@ sr_icmp_hdr_t *get_icmp_header(uint8_t packet*){
 
 
 
-//COMPLETE//
+/*COMPLETE*/
 int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface){
-  //Create an empty packet with the size depending on the type of icmp message.
+  /*Create an empty packet with the size depending on the type of icmp message.*/
   unsigned int len = sizeof(sr_ethernet_hdr_t)+sizeof(sr_ip_hdr_t)+;
   uint8_t *newPacket;
   switch(icmp_type){
     case(icmp_type_destination_unreachable):
     case(icmp_type_time_exceeded):
-    //case(icmp_type_echo_request):
+    /*case(icmp_type_echo_request):*/
       len +=sizeof(sr_icmp_t3_hdr_t);
       break;
     case(icmp_type_echo_reply):
@@ -525,27 +490,27 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   }
   *newPacket = (*uint8_t)malloc(len);
   bzero(newPacket,len);
-  //ICMP is wrapped by IP which is wrapped by Ethernet.
-  //Constructing from Ethernet -> ICMP
-  //get Ethernet and IP headers, icmp will be split up at the end by type.
+  /*ICMP is wrapped by IP which is wrapped by Ethernet.
+  Constructing from Ethernet -> ICMP
+  get Ethernet and IP headers, icmp will be split up at the end by type.*/
   sr_ethernet_hdr_t *recievedEthernetHeader = get_ethernet_header(originalPacket);
   sr_ip_hdr_t *recievedIPHeader = get_ip_header(originalPacket);
   sr_ethernet_hdr_t *newEthernetHeader = get_ethernet_header(newPacket);
   sr_ip_hdr_t *newIPHeader = get_ip_header(newPacket);
   
 
-  //Construct Ethernet Header
-  //get the interface so we can have address for ethernet header source host
+  /*Construct Ethernet Header
+  get the interface so we can have address for ethernet header source host*/
   struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_src);
   memcpy(newEthernetHeader->ether_dhost,recievedEthernetHeader->ether_shost,ETHER_ADDR_LEN);
   memcpy(newEthernetHeader->ether_shost,outgoingInterface->addr,ETHER_ADDR_LEN);
-  //htons: host to network short
+  /*htons: host to network short*/
   newEthernetHeader->ether_type = htons(ethertype_ip);
-  //newEthernetHeader->ether_dhost = recievedEthernetHeader->ether_shost;
-  //newEthernetHeader->ether_shost = outgoingInterface->addr;
+  /*newEthernetHeader->ether_dhost = recievedEthernetHeader->ether_shost;
+  newEthernetHeader->ether_shost = outgoingInterface->addr;*/
 
-  //Construct IP header
-  //need to fill in
+  /*Construct IP header
+  need to fill in*/
   newIPHeader->ip_hl = 4;
   newIPHeader->ip_v=4;
   newIPHeader->ip_tos = originalIPHeader->ip_tos;
@@ -559,11 +524,11 @@ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8
   newIPHeader->ip_sum = 0;
   newIPHeader->ip_sum=cksum(newIPHeader,len-sizeof(sr_ethernet_hdr_t));
 
-  //Construct ICMP header and send!
+  /*Construct ICMP header and send!*/
   switch(icmp_type){
     case(icmp_type_destination_unreachable):
     case(icmp_type_time_exceeded):
-    //case(icmp_type_echo_request):
+    /*case(icmp_type_echo_request):*/
     sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_header(newPacket);
     newICMPT3Header->icmp_type = icmp_type;
     newICMPT3Header->icmp_code = icmp_code;
@@ -597,7 +562,7 @@ struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t des
   }
   return NULL;
 }
-//https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol
+/*https://en.wikipedia.org/wiki/Internet_Control_Message_Protocol*/
 enum sr_icmp_type{
   icmp_type_destination_unreachable = 0x0003,
   icmp_type_echo_reply = 0x0,
