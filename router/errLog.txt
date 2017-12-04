@@ -3,60 +3,55 @@ sr_router.h:81:87: error: expected ‘{’ before ‘*’ token
  void sr_handlepacket_ip(struct sr_instance* sr,uint8_t *packet,unsigned int len,struct* sr_if interface);
                                                                                        ^
 sr_router.c: In function ‘sr_handle_arpreq’:
-sr_router.c:182:1: error: expected expression before ‘<<’ token
- <<<<<<< HEAD
- ^
-sr_router.c:184:1: error: expected expression before ‘==’ token
- =======
- ^
-sr_router.c:186:1: error: expected expression before ‘>>’ token
- >>>>>>> 51c4cc382f85f53c70b5e8a6986c32075079461a
- ^
-sr_router.c:186:9: error: invalid suffix "c4cc382f85f53c70b5e8a6986c32075079461a" on integer constant
- >>>>>>> 51c4cc382f85f53c70b5e8a6986c32075079461a
-         ^
+sr_router.c:183:10: warning: passing argument 4 of ‘send_icmp’ from incompatible pointer type [enabled by default]
+          send_icmp(sr,0x0003,0x0003,curr_packet,out_iface);
+          ^
+In file included from sr_router.c:22:0:
+sr_router.h:89:5: note: expected ‘uint8_t *’ but argument is of type ‘struct sr_packet *’
+ int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
+     ^
 sr_router.c:179:13: warning: unused variable ‘interface’ [-Wunused-variable]
       char*  interface;
              ^
 sr_router.c: In function ‘sr_handlepacket’:
-sr_router.c:320:7: warning: implicit declaration of function ‘sr_handlepacket_ip’ [-Wimplicit-function-declaration]
+sr_router.c:319:7: warning: implicit declaration of function ‘sr_handlepacket_ip’ [-Wimplicit-function-declaration]
        sr_handlepacket_ip(sr,packet,len,simpleRouterInterface);
        ^
 sr_router.c: At top level:
-sr_router.c:331:6: warning: conflicting types for ‘sr_handlepacket_ip’ [enabled by default]
+sr_router.c:330:6: warning: conflicting types for ‘sr_handlepacket_ip’ [enabled by default]
  void sr_handlepacket_ip(struct sr_instance* sr,
       ^
-sr_router.c:320:7: note: previous implicit declaration of ‘sr_handlepacket_ip’ was here
+sr_router.c:319:7: note: previous implicit declaration of ‘sr_handlepacket_ip’ was here
        sr_handlepacket_ip(sr,packet,len,simpleRouterInterface);
        ^
 sr_router.c: In function ‘sr_forward_handler’:
-sr_router.c:366:10: warning: implicit declaration of function ‘get_interface_for_destination’ [-Wimplicit-function-declaration]
+sr_router.c:365:10: warning: implicit declaration of function ‘get_interface_for_destination’ [-Wimplicit-function-declaration]
    struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_dst);
           ^
-sr_router.c:366:37: warning: initialization makes pointer from integer without a cast [enabled by default]
+sr_router.c:365:37: warning: initialization makes pointer from integer without a cast [enabled by default]
    struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_dst);
                                      ^
-sr_router.c:370:7: warning: passing argument 4 of ‘sr_forward_packet’ makes integer from pointer without a cast [enabled by default]
+sr_router.c:369:7: warning: passing argument 4 of ‘sr_forward_packet’ makes integer from pointer without a cast [enabled by default]
        sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
        ^
 In file included from sr_router.c:22:0:
 sr_router.h:83:6: note: expected ‘uint8_t’ but argument is of type ‘struct sr_if *’
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
-sr_router.c:370:7: warning: passing argument 5 of ‘sr_forward_packet’ from incompatible pointer type [enabled by default]
+sr_router.c:369:7: warning: passing argument 5 of ‘sr_forward_packet’ from incompatible pointer type [enabled by default]
        sr_forward_packet(sr,packet,len,outgoingInterface,entryToUse->mac);
        ^
 In file included from sr_router.c:22:0:
 sr_router.h:83:6: note: expected ‘struct sr_if *’ but argument is of type ‘unsigned char *’
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
-sr_router.c:376:7: error: too few arguments to function ‘sr_handle_arpreq’
+sr_router.c:375:7: error: too few arguments to function ‘sr_handle_arpreq’
        sr_handle_arpreq(sr,request);
        ^
 sr_router.c:162:6: note: declared here
  void sr_handle_arpreq(struct sr_instance *sr, struct sr_arpreq *req,
       ^
-sr_router.c:383:5: warning: passing argument 4 of ‘send_icmp’ makes pointer from integer without a cast [enabled by default]
+sr_router.c:382:5: warning: passing argument 4 of ‘send_icmp’ makes pointer from integer without a cast [enabled by default]
      send_icmp(sr,0x0003,0x0,*packet,interface);
      ^
 In file included from sr_router.c:22:0:
@@ -64,7 +59,7 @@ sr_router.h:89:5: note: expected ‘uint8_t *’ but argument is of type ‘uint
  int send_icmp(struct sr_instance* sr, uint8_t icmp_type, uint8_t icmp_code,uint8_t *originalPacket, struct sr_if *interface);
      ^
 sr_router.c: At top level:
-sr_router.c:386:6: error: conflicting types for ‘sr_forward_packet’
+sr_router.c:385:6: error: conflicting types for ‘sr_forward_packet’
  void sr_forward_packet(struct sr_instance* sr,
       ^
 In file included from sr_router.c:22:0:
@@ -72,18 +67,18 @@ sr_router.h:83:6: note: previous declaration of ‘sr_forward_packet’ was here
  void sr_forward_packet(struct sr_instance* sr,uint8_t *packet,unsigned int len,uint8_t macAddress,struct  sr_if *outgoingInterface);
       ^
 sr_router.c: In function ‘sr_handle_ip_packet_reception’:
-sr_router.c:407:3: error: invalid initializer
+sr_router.c:406:3: error: invalid initializer
    sr_ip_hdr_t ip_header = get_ip_header(packet);
    ^
-sr_router.c:409:42: error: invalid type argument of ‘->’ (have ‘sr_ip_hdr_t’)
+sr_router.c:408:42: error: invalid type argument of ‘->’ (have ‘sr_ip_hdr_t’)
    uint8_t packets_ip_protocol = ip_header->ip_p;
                                           ^
-sr_router.c:415:26: error: ‘icmp_header’ undeclared (first use in this function)
+sr_router.c:414:26: error: ‘icmp_header’ undeclared (first use in this function)
      if(is_icmp_packet_ok(icmp_header,len)){
                           ^
-sr_router.c:415:26: note: each undeclared identifier is reported only once for each function it appears in
+sr_router.c:414:26: note: each undeclared identifier is reported only once for each function it appears in
 sr_router.c: In function ‘is_ip_packet_ok’:
-sr_router.c:431:3: error: too few arguments to function ‘is_ip_chksum_ok’
+sr_router.c:430:3: error: too few arguments to function ‘is_ip_chksum_ok’
    uint8_t isPacketOkay = (is_ip_chksum_ok());
    ^
 In file included from sr_router.c:22:0:
@@ -91,20 +86,20 @@ sr_router.h:88:9: note: declared here
  uint8_t is_ip_chksum_ok(sr_ip_hdr_t *ip_header);
          ^
 sr_router.c: In function ‘send_icmp’:
-sr_router.c:502:37: warning: initialization makes pointer from integer without a cast [enabled by default]
+sr_router.c:501:37: warning: initialization makes pointer from integer without a cast [enabled by default]
    struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_src);
                                      ^
-sr_router.c:530:5: error: a label can only be part of a statement and a declaration is not a statement
+sr_router.c:529:5: error: a label can only be part of a statement and a declaration is not a statement
      sr_icmp_t3_hdr_t *newICMPT3Header = get_icmp_t3_header(newPacket);
      ^
-sr_router.c:540:5: error: a label can only be part of a statement and a declaration is not a statement
+sr_router.c:539:5: error: a label can only be part of a statement and a declaration is not a statement
      sr_icmp_hdr_t *newICMPHeader = get_icmp_header(newPacket);
      ^
 sr_router.c: At top level:
-sr_router.c:553:15: error: conflicting types for ‘get_interface_for_destination’
+sr_router.c:552:15: error: conflicting types for ‘get_interface_for_destination’
  struct sr_if* get_interface_for_destination(struct sr_instance *sr, uint32_t destination) {
                ^
-sr_router.c:366:37: note: previous implicit declaration of ‘get_interface_for_destination’ was here
+sr_router.c:365:37: note: previous implicit declaration of ‘get_interface_for_destination’ was here
    struct sr_if* outgoingInterface = get_interface_for_destination(sr,recievedIPHeader->ip_dst);
                                      ^
 make: *** [sr_router.o] Error 1
